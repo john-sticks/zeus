@@ -1,0 +1,16 @@
+﻿<permisos>
+  <navigation>
+    <page title="Consulta involucrados" icon="fa fa-th-large" href="~/hechos/involucrados"></page>
+    <page title="Consulta Hechos" icon="fa fa-th-large" href="~/hechos/consulta"></page>
+    <page title="Informe Hechos" icon="fa fa-th-large" href="~/Consultas/Informe_Hechos.aspx"></page>
+    <page title="Cobertura de Datos" icon="fa fa-th-large" href="~/cobertura"></page>
+
+  </navigation>
+  <notnavigation>
+    <page title="Consulta Imputados Historico" icon="fa fa-th-large" href="~/Consultas/Consulta_Imputados_Historico_Detalle.aspx"></page>
+    <page title="Consulta Hechos Historico" icon="fa fa-th-large" href="~/Consultas/Consulta_Hechos_Historico_Detalle.aspx"></page>
+    <page title="Consulta Georeferncial" icon="fa fa-th-large" href="~/Consultas/Consulta_Georeferncial.aspx"></page>
+
+    <page title="CerraSesion" icon="" href="~/CerrarSesion.aspx"></page>
+  </notnavigation>
+</permisos>

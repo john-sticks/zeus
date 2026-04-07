@@ -1,0 +1,19 @@
+﻿@inject SBInteligencia.Security.MenuXmlService MenuService
+
+@{
+    var menu = MenuService.GetMenu(User);
+}
+
+<ul class="sidebar-menu" data-widget="tree">
+    <li class="header">MENU</li>
+
+    @foreach (var item in menu)
+    {
+        <li>
+            <a href="@item.Url">
+                <i class="@item.Icon"></i>
+                <span>@item.Text</span>
+            </a>
+        </li>
+    }
+</ul>

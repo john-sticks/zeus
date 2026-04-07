@@ -1,0 +1,83 @@
+﻿@{
+    Layout = null; // 🔥 CLAVE: NO usar _Layout
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Login - SBInteligencia</title>
+
+    <!-- Estética original -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link href="https://fonts.googleapis.com/css?family=Roboto|Varela+Round" rel="stylesheet">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+    <link rel="stylesheet" href="~/css/login.css" />
+</head>
+
+<body>
+
+    <div class="image-container set-full-height">
+
+        <div class="login-form">
+
+            <form method="post" asp-controller="Login" asp-action="Index">
+
+                <div class="wizard-header text-center">
+                    <h3 class="wizard-title">Identificarse con su cuenta</h3>
+                    <p class="category">Esta información nos permitirá saber más sobre usted.</p>
+                </div>
+
+                <div style="text-align:center; padding:10px;">
+                    <img src="~/img/logosistemaonlineChicoSF.png" />
+                </div>
+
+                <!-- Usuario -->
+                <div class="form-group">
+                    <input name="Usuario" class="form-control"
+                           placeholder="Usuario" maxlength="15" required />
+                </div>
+
+                <!-- Password -->
+                <div class="form-group">
+                    <input name="Password" type="password"
+                           class="form-control"
+                           placeholder="Contraseña"
+                           maxlength="15" required />
+                </div>
+
+                <!-- CAPTCHA -->
+                @if (ViewBag.ShowCaptcha == true)
+                {
+                    <div class="cf-turnstile"
+                         data-sitekey="0x4AAAAAAB_iKs_HWU3JSfXL"
+                         data-theme="light">
+                    </div>
+                }
+
+                <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
+                <!-- BOTÓN -->
+                <button type="submit" class="btn bg-orange btn-block">
+                    Ingresar
+                </button>
+
+                <!-- MENSAJE -->
+                @if (!string.IsNullOrEmpty(ViewBag.Error))
+                {
+                    <div class="alert alert-info" style="color:red;">
+                        @ViewBag.Error
+                    </div>
+                }
+
+            </form>
+        </div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+</body>
+</html>

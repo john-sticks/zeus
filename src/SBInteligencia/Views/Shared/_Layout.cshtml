@@ -1,0 +1,209 @@
+﻿@using System.Security.Claims
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>@ViewData["Title"] - SBInteligencia</title>
+
+    <!-- AdminLTE -->
+    <link rel="stylesheet" href="~/adminlte/bower_components/bootstrap/dist/css/bootstrap.css">
+    <link rel="stylesheet" href="~/adminlte/bower_components/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="~/adminlte/bower_components/Ionicons/css/ionicons.min.css">
+
+    <link rel="stylesheet" href="~/adminlte/dist/css/AdminLTE.css">
+    
+    <link rel="stylesheet" href="~/adminlte/dist/css/skins/_all-skins.min.css">
+    @* <link rel="stylesheet" href="~/css/site.css" rel="stylesheet" /> *@
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+    <style>
+        .leaflet-container {
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+</head>
+@* @RenderSection("Scripts", required: false) *@
+<body class="hold-transition skin-blue sidebar-mini">
+    <div class="wrapper">
+
+        <!-- HEADER -->
+        <header class="main-header">
+            <a href="/Home" class="logo">
+                <span class="logo-lg">Inteligencia</span>
+            </a>
+
+            <nav class="navbar navbar-static-top">
+                <a href="#" class="sidebar-toggle" data-toggle="push-menu">
+                    <span class="sr-only">Toggle navigation</span>
+                </a>
+
+                <div class="navbar-custom-menu">
+                    <ul class="nav navbar-nav">
+
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <li class="dropdown user user-menu">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                    <span>@User.Identity.Name</span>
+                                </a>
+
+                                <ul class="dropdown-menu">
+                                    <li class="user-header">
+                                        <p>
+                                            @User.Identity.Name
+                                            <small>
+                                                @User.FindFirst(ClaimTypes.Role)?.Value
+                                            </small>
+                                        </p>
+                                    </li>
+
+                                    <li class="user-footer">
+                                        <div class="pull-right">
+                                            <a href="/Login/Logout" class="btn btn-default btn-flat">
+                                                Cerrar sesión
+                                            </a>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+
+                    </ul>
+                </div>
+            </nav>
+        </header>
+
+        <!-- SIDEBAR -->
+        <aside class="main-sidebar">
+            <section class="sidebar">
+
+                <!-- USER PANEL -->
+                <div class="user-panel">
+                    <div class="pull-left image">
+                        <img src="~/adminlte/LogoIntSF.png" class="img-circle" />
+                    </div>
+                    <div class="pull-left info">
+                        <p>@User.Identity.Name</p>
+                        <a href="#">
+                            <i class="fa fa-circle text-success"></i>
+                            @User.FindFirst(ClaimTypes.Role)?.Value
+                        </a>
+                    </div>
+                </div>
+
+                <!-- MENU -->
+                @await Html.PartialAsync("_Sidebar")
+            </section>
+        </aside>
+
+        <!-- CONTENT -->
+        <div class="content-wrapper">
+
+            <section class="content-header">
+                <h1>@ViewData["Title"]</h1>
+            </section>
+
+            <section class="content">
+                @RenderBody()
+            </section>
+
+        </div>
+
+        <!-- FOOTER -->
+        <footer class="main-footer text-center">
+            Sistema de Inteligencia Criminal
+        </footer>
+
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="~/adminlte/bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="~/adminlte/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="~/adminlte/bower_components/jquery-slimscroll/jquery.slimscroll.min.js"></script>
+    <script src="~/adminlte/bower_components/fastclick/lib/fastclick.js"></script>
+    <script src="~/adminlte/dist/js/adminlte.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    
+    <script>
+            function showLoader(texto = "Procesando...") {
+            $("#globalLoader div div").text(texto);
+            $("#globalLoader").fadeIn(100);
+        }
+
+        function hideLoader() {
+            $("#globalLoader").fadeOut(100);
+        }
+
+        // 🔥 AUTO GLOBAL AJAX
+        $(document).ajaxStart(function () {
+            showLoader();
+        });
+
+        $(document).ajaxStop(function () {
+            hideLoader();
+        });
+        
+        toastr.options = {
+        closeButton: true,
+        progressBar: true,
+        positionClass: "toast-top-right",
+        timeOut: "5000"
+           };
+
+        let ultimaNotificacionOffline = 0; // para evitar spam
+
+        function checkRealInternet() {
+
+            fetch("https://clients3.google.com/generate_204", { mode: "no-cors" })
+                .then(() => {
+                    // ✅ Internet OK → no hacemos nada
+                })
+                .catch(() => {
+                    // ❌ Sin conexión real → notificar con límite de frecuencia
+
+                    let ahora = Date.now();
+
+                    // Notificar solo si pasaron al menos 8s desde la última notificación
+                    if (ahora - ultimaNotificacionOffline > 8000) {
+                        toastr.clear();
+                        toastr.options.closeButton = true;
+                        toastr.options.timeOut = 0; // No se cierra solo
+                        toastr.error("⚠️ Sin conexión a Internet. Verifique su red.");
+                        ultimaNotificacionOffline = ahora;
+                    }
+                });
+        }
+
+        // Primera verificación al cargar
+        checkRealInternet();
+
+        // Reintenta cada 8 segundos solo para detectar estado OFFLINE
+        setInterval(checkRealInternet, 8000);
+    </script>
+    @RenderSection("Scripts", required: false)
+    <div id="globalLoader" style="
+    display:none;
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.4);
+    z-index:9999;
+    justify-content:center;
+    align-items:center;
+">
+        <div style="text-align:center; color:white;">
+            <i class="fa fa-spinner fa-spin fa-3x"></i>
+            <div style="margin-top:10px;">Procesando...</div>
+        </div>
+    </div>
+</body>
+</html>

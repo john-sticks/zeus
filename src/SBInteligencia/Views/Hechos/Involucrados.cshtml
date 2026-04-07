@@ -1,0 +1,135 @@
+﻿@{
+    ViewData["Title"] = "Consulta Involucrados";
+}
+
+
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/css/tom-select.css" rel="stylesheet" />
+<style>
+    #mapaFiltro {
+        border-radius: 6px;
+        border: 1px solid #ddd;
+    }
+
+    #mapa {
+        height: 400px;
+        width: 100%;
+        min-height: 300px;
+    }
+</style>
+<div class="content">
+    <div class="box">
+
+        <div class="box-header with-border">
+            <h3 class="box-title">Consulta de Involucrados</h3>
+        </div>
+
+        <div class="box-body">
+            <div class="form-horizontal">
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Nombre</label>
+                    <div class="col-sm-6">
+                        <input type="text" id="nombre" class="form-control" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Apellido</label>
+                    <div class="col-sm-6">
+                        <input type="text" id="apellido" class="form-control" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">DNI</label>
+                    <div class="col-sm-6">
+                        <input type="text" id="dni" class="form-control" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Año</label>
+                    <div class="col-sm-6">
+                        <select id="anio" class="form-control">
+                            <option value="2026">2026</option>
+                            <option value="2025">2025</option>
+                            <option value="2024">2024</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Cantidad</label>
+                    <div class="col-sm-6">
+                        <select id="cantidad" class="form-control">
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="200">200</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-sm-offset-3 col-sm-9">
+                        <button type="button" class="btn btn-default" id="btnBuscar">
+                            Buscar
+                        </button>
+
+                        <button class="btn btn-default" onclick="limpiar()">
+                            Limpiar
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- RESULTADOS -->
+    <div id="boxResultados" style="display:none;">
+
+        <div class="card p-3">
+            <h4>Resultados</h4>
+
+            <table class="table table-sm table-bordered" id="tabla">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Apellido</th>
+                        <th>Nombre</th>
+                        <th>DNI</th>
+                        <th>Tipo</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+
+            <div id="paginador" style="margin-top:10px;"></div>
+
+        </div>
+
+    </div>
+
+</div>
+<div class="modal fade" id="modalDetalle" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h4 class="modal-title">Detalle Involucrado</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+
+            <div class="modal-body" id="detalleBody"></div>
+
+        </div>
+    </div>
+</div>
+@section Scripts {
+
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/js/tom-select.complete.min.js"></script>
+    <script src="@(Url.Content("~/js/involucrados-consulta.js"))"></script>
+
+}

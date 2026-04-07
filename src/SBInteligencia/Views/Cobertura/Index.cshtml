@@ -1,0 +1,128 @@
+﻿<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+
+<style>
+    .cal-box {
+        width: 28px;
+        height: 28px;
+        display: inline-block;
+        margin: 2px;
+        text-align: center;
+        line-height: 28px;
+        font-size: 12px;
+        font-weight: bold;
+        color: #fff;
+    }
+
+    .cal-hecho {
+        background: #4CAF50;
+    }
+
+    .cal-imputado {
+        background: #2196F3;
+    }
+
+    .cal-ambos {
+        background: #9C27B0;
+    }
+
+    .cal-empty {
+        background: #e0e0e0;
+        color: #555;
+
+    }
+
+    .cal-missing {
+        background: #f5f5f5;
+        color: #999;
+    }
+
+    #modalMapa {
+        z-index: 8000;
+    }
+
+    #modalDetalle {
+        z-index: 9000;
+    }
+</style>
+<div class="content">
+
+    <div class="box">
+        <h3 class="text-center">📊 Cobertura de Datos por Partido</h3>
+        <br />
+
+        <!-- BOTONES -->
+        <div class="text-right" style="margin-bottom: 15px;">
+            <button type="button" class="btn btn-success" onclick="abrirMapa()">📍 Mapa </button>
+        </div>
+    </div>
+    <div id="resultados" >
+        <table class="table table-bordered" id="tabla">
+            <thead>
+                <tr>
+                    <th>Partido</th>
+                    <th>Hechos Desde</th>
+                    <th>Hechos Hasta</th>
+                    <th>Involucrados Desde</th>
+                    <th>Involucrados Hasta</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+</div>
+
+<div class="modal fade" id="modalDetalle" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h4 id="tituloDetalle" class="modal-title">Detalle</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+
+            <div class="modal-body">
+
+                <div id="contenidoDetalle">
+                    <!-- acá vamos a renderizar dinámico -->
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="modalMapa" tabindex="-1">
+    <div class="modal-dialog modal-lg" style="max-width:1100px;">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h4 class="modal-title">Mapa de Cobertura</h4>
+                <button class="close" data-dismiss="modal">&times;</button>
+            </div>
+
+            <div class="modal-body">
+
+                <div style="margin-bottom:10px;">
+                    <span class="cal-box cal-hecho"></span> Hechos
+                    <span class="cal-box cal-imputado"></span> Involucrados
+                    <span class="cal-box cal-ambos"></span> Ambos
+                    <span class="cal-box cal-empty"></span> Sin datos
+                </div>
+
+                <div id="mapCobertura" style="height:600px;"></div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script src="~/js/cobertura.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+}

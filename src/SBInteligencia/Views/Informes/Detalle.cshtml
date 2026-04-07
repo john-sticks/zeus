@@ -1,0 +1,723 @@
+﻿@{
+    ViewData["Title"] = "Informe Hechos";
+    var id = ViewBag.IdInforme;
+
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+}
+
+<div class="content">
+    <div id="loaderListado" style="text-align:center; padding:20px; display:none;">
+        <i class="fa fa-spinner fa-spin"></i>
+        Cargando informes...
+    </div>
+    <div id="bloqueListado"></div>
+    <div id="bloqueInforme" style="display:none;">
+
+
+
+        <div class="box">
+            <div class="box-header with-border">
+
+                <h3>Informe de Hechos Seleccionados</h3>
+
+                <!-- 🔵 MODO PREVIEW -->
+                <div id="bloquePreview" style="display:none;">
+                    <div class="d-flex gap-2 align-items-center">
+                        <div class="form-inline">
+                            <input id="txtNombreInforme" class="form-control" style="width:300px"
+                                   placeholder="Ej: Hechos Zona Oeste" />
+
+                            <button class="btn btn-warning" onclick="guardarInforme()">
+                                Guardar informe
+                            </button>
+
+                            <button class="btn btn-danger" onclick="cerrarInforme()">
+                                Cerrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 🔷 MODO INFORME ABIERTO -->
+                <div id="bloqueInformeAbierto" style="display:none;">
+                    <div class="d-flex gap-2 align-items-center">
+                        <span class="badge bg-success">
+                            Informe abierto
+                        </span>
+
+                        <strong id="lblNombreInforme"></strong>
+                        <button id="btnSobreescribir"
+                                class="btn btn-warning"
+                                style="display:none;"
+                                onclick="guardarInforme()">
+                            Sobreescribir
+                        </button>
+                        <button class="btn btn-danger" onclick="cerrarInforme()">
+                            Cerrar
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <table class="table table-bordered" id="tablaInforme">
+            <thead>
+                <tr>
+                    <th>Partido</th>
+                    <th>Fecha</th>
+                    <th>Calificación</th>
+                    <th>Dirección</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+    <div id="contenedorMapaInforme" style="display:none;">
+        <div id="mapa" style="height:400px;"></div>
+        <div id="leyendaMapa"></div>
+    </div>
+</div>
+
+@section Scripts {
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <script>
+
+        let state = {
+            idInforme: null,
+            data: [],
+            modo: null,
+            dto: null,
+            nombreInforme: null, // 🔥 NUEVO
+            dirty: false
+        };
+                let map;
+                let markers = [];
+
+                document.addEventListener("DOMContentLoaded", async function () {
+
+            initMapa();
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get("id");
+
+            if (id) {
+
+                state.idInforme = id;
+                state.modo = "guardado";
+
+                const res = await fetch(`/api/informe/session`);
+
+                if (res.status === 204) {
+                    await fetch(`/api/informe/cargar-en-session`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(id)
+                    });
+                }
+
+                await cargarDesdeSessionIfExists();
+                return;
+            }
+
+            // 🔥 FIX CORRECTO
+            await cargarDesdeSessionIfExists();
+        });
+        let originalHechosIds = null;
+        async function cargarDesdeSessionIfExists() {
+
+            const res = await fetch(`/api/informe/session`);
+
+            if (res.status === 204) {
+                state = {
+                    idInforme: null,
+                    data: [],
+                    modo: "listado",
+                    dirty: false,
+                    nombreInforme: null
+                };
+
+                originalHechosIds = null; // 🔥 reset
+
+                mostrarListado();
+                cargarListadoInformes();
+                return;
+            }
+
+            const dto = await res.json();
+
+            const hechos = dto.Hechos || dto.hechos || [];
+
+            const idFromDto = dto.IdInforme || dto.idInforme;
+
+            if (!state.idInforme && idFromDto) {
+                state.idInforme = idFromDto;
+            }
+
+            const newIds = (hechos || [])
+                .map(x => x.idHecho)
+                .sort()
+                .join(",");
+
+            // 🔥 GUARDAR ORIGINAL SOLO UNA VEZ
+            if (state.idInforme && originalHechosIds === null) {
+                originalHechosIds = newIds;
+            }
+
+            // 🔥 DETECTAR CAMBIO REAL
+            // if (state.idInforme && originalHechosIds && newIds !== originalHechosIds) {
+                state.dirty = true;
+            // }
+
+            // 🔥 MODOS
+            if (state.idInforme) {
+                state.modo = "guardado";
+            }
+            else if (hechos.length > 0) {
+                state.modo = "preview";
+            }
+            else {
+                state.modo = "listado";
+            }
+
+            state.nombreInforme = dto?.Nombre || dto?.nombre || null;
+
+            await cargarDesdeSession(dto);
+        }
+
+                function initMapa() {
+
+                map = L.map('mapa').setView([-38, -59], 6);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap'
+                }).addTo(map);
+            }
+
+                    async function cargarInforme(id) {
+
+                const res = await fetch(`/api/informe/${id}`);
+
+                if (!res.ok) {
+                    console.error(await res.text());
+                    return;
+                }
+
+        const result = await res.json();
+
+        state.idInforme = id;
+        state.data = result.hechos;
+        state.nombreInforme = result.nombre;
+        state.modo = "guardado";
+
+        renderTabla(result.hechos);
+        renderLeyenda(result.hechos);
+
+        mostrarInforme();
+        toggleHeader();
+
+        setTimeout(() => {
+            actualizarMapa(result.hechos);
+        }, 100);
+                    }
+        function renderTabla(rows) {
+
+            const tbody = document.querySelector("#tablaInforme tbody");
+            tbody.innerHTML = "";
+
+            document.querySelector("#tablaInforme thead").innerHTML = `
+                <tr>
+                    <th>ID</th>
+                    <th>Título</th>
+                    <th>Calificación</th>
+                    <th></th>
+                </tr>
+            `;
+
+            rows.forEach(x => {
+
+                const tr = document.createElement("tr");
+
+                tr.innerHTML = `
+                    <td>${x.id}</td>
+                    <td>${x.titulo}</td>
+                    <td>${x.calificacion}</td>
+                    <td>
+                        <button onclick="eliminar(${x.id})" class="btn btn-sm btn-danger">
+                            Quitar
+                        </button>
+                    </td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+        }
+        function actualizarMapa(rows) {
+
+            // 🔥 limpiar TODO
+            map.eachLayer(layer => {
+                if (!(layer instanceof L.TileLayer)) {
+                    map.removeLayer(layer);
+                }
+            });
+
+            markers = [];
+            const bounds = [];
+
+            rows.forEach(x => {
+
+                if (!x.latitud || !x.longitud) return;
+
+                const marker = L.marker([x.latitud, x.longitud])
+                    .addTo(map)
+                    .bindPopup(`
+                        <b>${x.titulo}</b><br>
+                        ${x.descripcion || ""}
+                    `);
+
+                markers.push(marker);
+                bounds.push([x.latitud, x.longitud]);
+            });
+
+            // 🔥 CLAVE: forzar recalculo SIEMPRE antes del zoom
+            setTimeout(() => {
+
+                map.invalidateSize(); // 🔥 MUY IMPORTANTE
+
+                if (bounds.length > 0) {
+                    map.fitBounds(bounds, {
+                        padding: [30, 30],
+                        maxZoom: 15
+                    });
+                }
+
+            }, 50);
+        }
+        
+        function renderLeyenda(rows) {
+
+            const cont = document.getElementById("leyendaMapa");
+            cont.innerHTML = "";
+
+            const agrupados = {};
+
+            rows.forEach(x => {
+
+                const key = x.calificacion || "Sin dato";
+
+                if (!agrupados[key]) {
+                    agrupados[key] = 0;
+                }
+
+                agrupados[key]++;
+            });
+
+            Object.keys(agrupados).forEach(k => {
+
+                cont.innerHTML += `
+                    <span style="margin-right:10px;">
+                        <span style="
+                            display:inline-block;
+                            width:10px;
+                            height:10px;
+                            background:red;
+                            border-radius:50%;
+                            margin-right:5px;">
+                        </span>
+                        ${k} (${agrupados[k]})
+                    </span>
+                `;
+            });
+        }
+        async function eliminar(idHecho) {
+
+            if (!confirm("¿Eliminar del informe?")) return;
+
+            const res = await fetch(`/api/informe/session`);
+
+            if (res.status === 204) {
+                toastr.error("No hay sesión activa");
+                return;
+            }
+
+            const session = await res.json();
+
+            const hechos = session.Hechos || session.hechos || [];
+
+            const nuevos = hechos.filter(x => x.idHecho !== idHecho);
+
+            await fetch(`/api/hechos/guardar-session`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    Hechos: nuevos,
+                    IdInforme: state.idInforme,
+                    Reemplazar: true
+                })
+            });
+
+            // 🔥 SOLO marcar dirty si es informe guardado
+            if (state.modo === "guardado") {
+                state.dirty = true;
+                toastr.warning("Cambios sin guardar");
+            } else {
+                toastr.success("Hecho eliminado");
+            }
+
+            // 🔥 REFRESCAR DESDE BACK (fuente real)
+            await cargarDesdeSessionIfExists();
+        }
+                // 🔥 refrescar preview
+        async function cargarDesdeSession(dto) {
+
+        const dtoPreview = {
+            Hechos: dto.Hechos || dto.hechos
+        };
+
+            state.dto = dto;
+            state.nombreInforme = dto?.Nombre || dto?.nombre || null;
+
+            document.getElementById("txtNombreInforme").value = dto?.Nombre || "";
+
+            const res = await fetch(`/api/informe/preview`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(dtoPreview)
+            });
+
+            const data = await res.json();
+
+            state.data = data;
+
+            renderTabla(data);
+            renderLeyenda(data);
+
+            mostrarInforme();
+            toggleHeader();
+
+        requestAnimationFrame(() => {
+            actualizarMapa(data);
+        });
+
+            toastr.clear();
+
+            if (state.modo === "preview") {
+                toastr.info("Informe temporal (no guardado)");
+            }
+            else if (state.modo === "guardado") {
+                toastr.success("Informe abierto correctamente");
+            }
+        }
+
+                async function guardarInforme() {
+
+            const session = await fetch(`/api/informe/session`).then(r => r.json());
+
+        const hechos = session.Hechos || session.hechos || [];
+
+        if (!session || hechos.length === 0) {
+            toastr.error("No hay datos");
+            return;
+        }
+
+            // 🔥 EXISTENTE → UPDATE
+        if (state.idInforme) {
+
+        const dto = {
+            IdInforme: state.idInforme,
+            Hechos: hechos,
+            Nombre: session.Nombre || session.nombre
+        };
+
+            console.log("DTO UPDATE:", dto); // 🔥 debug
+
+            await fetch(`/api/informe/actualizar`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(dto) // 🔥 ACÁ estaba el bug
+            });
+                const newIds = hechos
+        .map(x => x.idHecho)
+        .sort()
+        .join(",");
+                state.dirty = false;
+                originalHechosIds = newIds; // 🔥 actualizar baseline
+                toggleHeader();
+            toastr.success("Informe actualizado");
+            return;
+        }
+
+        // 🔥 NUEVO → CREATE
+        const nombre = document.getElementById("txtNombreInforme").value;
+
+        if (!nombre) {
+            toastr.warning("Debe ingresar un nombre");
+            return;
+        }
+
+        const dto = {
+            Hechos: hechos,
+            Nombre: nombre
+        };
+
+        console.log("DTO CREATE:", dto); // 🔥 debug
+
+        const res = await fetch(`/api/informe/crear`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(dto)
+        });
+
+        const result = await res.json();
+
+        toastr.success("Informe creado");
+
+        abrirInforme(result.id);
+        }
+
+        function renderListado(data) {
+
+
+            const cont = document.getElementById("bloqueListado");
+        // 🔥 ocultar loader
+        const loader = document.getElementById("loaderListado");
+        if (loader) loader.style.display = "none";
+        
+        let html = `
+                <div class="box">
+                    <div class="box-header">
+                        <h3>Informes Guardados</h3>
+                    </div>
+                    <div class="box-body">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Usuario</th>
+                                    <th>Fecha</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+            `;
+
+            data.forEach(x => {
+                html += `
+                    <tr>
+                        <td>${x.nombre}</td>
+                        <td>${x.usuarioCreador}</td>
+                        <td>${new Date(x.fechaCreacion).toLocaleDateString()}</td>
+                        <td>
+                            <button onclick="abrirInforme(${x.idInforme})">
+                                Abrir
+                            </button>
+
+                            <button onclick="confirmarEliminarInforme(${x.idInforme})">
+                                Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            cont.innerHTML = html;
+        }
+
+        async function cargarListadoInformes() {
+
+            const res = await fetch(`/api/informe/listado`);
+
+            if (!res.ok) {
+                console.error(await res.text());
+                return;
+            }
+
+            const data = await res.json();
+
+            renderListado(data);
+        }
+
+        async function abrirInforme(id) {
+
+            state.idInforme = id;
+            state.modo = "guardado";
+
+            // 🔥 LIMPIAR SESSION ANTES
+            await fetch(`/api/informe/cerrar-session`, {
+                method: "POST"
+            });
+
+            await fetch(`/api/informe/cargar-en-session`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(id)
+            });
+
+            await cargarDesdeSessionIfExists();
+
+            history.pushState({}, "", `?id=${id}`);
+        }
+
+
+                async function cerrarInforme() {
+
+            await fetch(`/api/informe/cerrar-session`, {
+                method: "POST"
+            });
+
+            state = {
+                idInforme: null,
+                data: [],
+                modo: "listado",
+                dirty: false
+            };
+
+            toggleHeader();
+
+            toastr.info("Informe cerrado");
+
+            // 🔥 limpiar UI actual
+            document.querySelector("#tablaInforme tbody").innerHTML = "";
+            document.getElementById("leyendaMapa").innerHTML = "";
+
+            // 🔥 mostrar listado y ocultar informe/mapa
+            mostrarListado();
+
+            // 🔥 recargar listado
+            cargarListadoInformes();
+
+            history.pushState({}, "", `/Informes/Detalle`);
+        }
+
+        window.addEventListener("popstate", () => {
+        location.reload(); // simple
+        });
+
+        function confirmarEliminarInforme(id) {
+
+                toastr.warning(`
+                <div>
+                            <div style="display:flex; align-items:center; gap:10px;">
+            <i class="fa fa-exclamation-triangle" style="color:#6c757d;"></i>
+            <div>¿Eliminar informe?</div>
+        </div>
+                    <button onclick="eliminarInforme(${id})" class="btn-confirmar">
+                        Sí
+                    </button>
+                    <button onclick="toastr.clear()" class="btn-cancelar">
+                        No
+                    </button>
+                </div>
+            `, '', {
+                timeOut: 0,
+                extendedTimeOut: 0,
+                closeButton: true,
+                allowHtml: true
+            });
+        }
+        async function eliminarInforme(id) {
+
+            toastr.clear(); // cerrar confirm
+
+            const res = await fetch(`/api/informe/eliminar-informe`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(id)
+            });
+
+            if (!res.ok) {
+                toastr.error("Error al eliminar informe");
+                return;
+            }
+
+            toastr.success("Informe eliminado");
+
+            // 🔥 refrescar listado
+            await cargarDesdeSessionIfExists();
+        }
+        function toggleUI(show) {
+            document.getElementById("bloqueInforme").style.display = show ? "block" : "none";
+            document.getElementById("contenedorMapaInforme").style.display = show ? "block" : "none";
+
+            if (show && map) {
+                setTimeout(() => {
+                    map.invalidateSize(); // 🔥 CLAVE
+                }, 200);
+            }
+        }
+        async function eliminarSeleccionados() {
+
+            const seleccionados = Array.from(document.querySelectorAll(".chkItem:checked"))
+                .map(x => parseInt(x.value));
+
+            if (seleccionados.length === 0) {
+                toastr.warning("No hay elementos seleccionados");
+                return;
+            }
+
+            for (let id of seleccionados) {
+                await eliminar(id);
+            }
+
+            toastr.success("Eliminación completa");
+        }
+
+        function mostrarListado() {
+            mostrarLoader();
+            document.getElementById("bloqueListado").style.display = "block";
+            document.getElementById("bloqueInforme").style.display = "none";
+            document.getElementById("contenedorMapaInforme").style.display = "none";
+        }
+
+        function mostrarInforme() {
+            document.getElementById("bloqueListado").style.display = "none";
+            document.getElementById("bloqueInforme").style.display = "block";
+            document.getElementById("contenedorMapaInforme").style.display = "block";
+
+            if (map) {
+                setTimeout(() => {
+                    map.invalidateSize(); // 🔥 CLAVE
+                }, 300);
+            }
+        }
+
+                function toggleHeader() {
+
+            if (state.modo === "preview") {
+
+                document.getElementById("bloquePreview").style.display = "block";
+                document.getElementById("bloqueInformeAbierto").style.display = "none";
+
+            } else {
+
+                document.getElementById("bloquePreview").style.display = "none";
+                document.getElementById("bloqueInformeAbierto").style.display = "block";
+
+                // 🔥 USAR EL DTO, NO EL INPUT
+        document.getElementById("lblNombreInforme").innerText =
+            state.nombreInforme + (state.dirty ? " *" : "");
+
+                document.getElementById("btnSobreescribir").style.display =
+        (state.modo === "guardado" && state.dirty)
+            ? "inline-block"
+            : "none";
+            }
+        }
+
+        function mostrarLoader() {
+            const loader = document.getElementById("loaderListado");
+            if (loader) loader.style.display = "block";
+        }
+    </script>
+}

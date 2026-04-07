@@ -1,0 +1,203 @@
+﻿@model SBInteligencia.DTO.HechoDetalleDto
+
+@{
+    ViewData["Title"] = "Detalle Hecho";
+}
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+<div class="content">
+    <div class="box">
+
+        <!-- HEADER -->
+        <div class="box-header with-border">
+            <h3 class="box-title">Datos del Hecho</h3>
+
+            <div class="box-tools pull-right">
+                <button class="btn btn-primary btn-sm" onclick="compartirInformacion()">
+                    <i class="fa fa-share"></i> Compartir
+                </button>
+            </div>
+        </div>
+
+        <!-- BODY -->
+        <div class="box-body">
+
+            <div class="row">
+
+                <!-- IZQUIERDA -->
+                <div class="col-md-6">
+
+                    <div class="form-group">
+                        <label>Calificaciones:</label>
+                        <div>@Model.Calificaciones</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>IPP:</label>
+                        <div>@Model.Ipp</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Partido:</label>
+                        <div>@Model.Partido</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Localidad:</label>
+                        <div>@Model.Localidad</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Latitud:</label>
+                        <div>
+                            @Model.LatitudRaw
+                            @if (!Model.TieneCoordenadas)
+                            {
+                                <span style="color:red;">(inválida)</span>
+                            }
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- DERECHA -->
+                <div class="col-md-6">
+
+                    <div class="form-group">
+                        <label>Calle:</label>
+                        <div>@Model.Calle</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Altura:</label>
+                        <div>@Model.Altura</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Dependencia:</label>
+                        <div>@Model.Dependencia</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Fecha:</label>
+                        <div>@Model.FechaCarga.ToString("dd/MM/yyyy")</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Longitud:</label>
+                        <div>
+                            @Model.LongitudRaw
+                            @if (!Model.TieneCoordenadas)
+                            {
+                                <span style="color:red;">(inválida)</span>
+                            }
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- RELATO -->
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label>Relato:</label>
+                        <div style="
+                            white-space: pre-line;
+                            overflow-wrap: anywhere;
+                            word-break: break-word;
+                        ">
+                            @Model.Relato
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MAPA -->
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label>Geo Referenciación</label>
+                    </div>
+
+                    <div style="width:100%;">
+                        <div id="map" style="height:400px;"></div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+
+<script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const lat = @Model.Latitud?.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    const lng = @Model.Longitud?.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+        if (lat !== null && lng !== null) {
+
+            const map = L.map('map').setView([lat, lng], 15);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap'
+            }).addTo(map);
+
+            L.marker([lat, lng])
+                .addTo(map)
+                .bindPopup("<b>@Model.Ipp</b><br>@Model.Calificaciones")
+                .openPopup();
+
+        } else {
+
+            // 🔥 clave: no rompe, solo no muestra mapa
+            document.getElementById("map").innerHTML =
+                "<p>Coordenadas inválidas o no disponibles</p>";
+        }
+
+    });
+            function obtenerInformacion() {
+
+        const tieneCoords = true;
+
+        const coords = tieneCoords
+            ? `\nUbicación: https://www.google.com/maps?q=-34.474687,-58.577386`
+            : "";
+
+        function decodeHtml(html) {
+            const txt = document.createElement("textarea");
+            txt.innerHTML = html;
+            return txt.value;
+        }
+
+        const relatoTexto = decodeHtml(`@Model.Relato`);
+
+        const relato = `Relato:\n${relatoTexto.replace(/\r?\n/g, '\n')}`;
+
+        return `IPP: PP-14-05-001293-26/00
+    Calificación: Lesiones culposas - Art.94 Consumado: Si
+    Partido: SAN FERNANDO
+    Localidad: VICTORIA
+    Dirección: MARTIN RODRIGUEZ 4800.0
+    Fecha: 01/03/2026
+    ${relato}
+    ${coords}`;
+    }
+        function compartirInformacion() {
+
+        const texto = obtenerInformacion();
+
+        if (navigator.share) {
+            navigator.share({
+                title: 'Datos del Hecho',
+                text: texto
+            })
+            .then(() => console.log('Compartido con éxito'))
+            .catch((error) => console.log('Error al compartir', error));
+
+        } else {
+            // 🔥 fallback útil
+            navigator.clipboard.writeText(texto);
+            alert('Copiado al portapapeles (navegador no soporta compartir)');
+        }
+    }
+</script>
