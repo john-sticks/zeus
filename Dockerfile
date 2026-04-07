@@ -24,10 +24,10 @@ COPY --from=build /app/publish .
 
 ENV ASPNETCORE_ENVIRONMENT=Production \
     ASPNETCORE_URLS=http://+:8008 \
-    DB_HOST=172.17.0.1 \
-    DB_PORT=3306 \
-    CERBERUS_HOST=172.17.0.1 \
-    CERBERUS_PORT=8004
+    Auth__Mode=Cerberus \
+    cerberus__BaseUrl=http://172.17.0.1:8004 \
+    ConnectionStrings__MySqlBase="Server=172.17.0.1;Port=3306;User=ariel;Connection Timeout=5;" \
+    ConnectionStrings__MySqlAnalytics="Server=172.17.0.1;Port=3306;User=ariel;Connection Timeout=5;Database=SBInteligencia;"
 
 EXPOSE 8008
 
