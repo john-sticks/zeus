@@ -86,7 +86,7 @@ namespace SBInteligencia
             builder.Services.AddScoped<HechoService>();
             builder.Services.AddScoped<InformeService>();
             builder.Services.AddScoped<DashboardService>();
-
+            Console.WriteLine("MySqlBase: " + builder.Configuration.GetConnectionString("MySqlBase"));
             var app = builder.Build();
 
             // 🔹 STATIC FILES
@@ -132,7 +132,6 @@ namespace SBInteligencia
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Login}/{action=Index}/{id?}");
-
             await app.RunAsync();
         }
     }

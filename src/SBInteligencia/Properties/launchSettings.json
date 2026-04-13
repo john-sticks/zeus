@@ -15,7 +15,12 @@
       "launchBrowser": true,
       "applicationUrl": "http://localhost:5258",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+
+        "ConnectionStrings__MySqlBase": "Server=10.200.0.79;Port=3306;User=ariel;Password=Tetratetra45+;",
+        "ConnectionStrings__MySqlAnalytics": "Server=10.200.0.79;Port=3306;Database=SBInteligencia;User=ariel;Password=Tetratetra45+;",
+
+        "Cerberus__BaseUrl": "http://icia-monitoreo:8004"
       }
     },
     "https": {
@@ -24,14 +29,24 @@
       "launchBrowser": true,
       "applicationUrl": "https://localhost:7235;http://localhost:5258",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+
+        "ConnectionStrings__MySqlBase": "Server=10.200.0.79;Port=3306;User=ariel;Password=Tetratetra45+;",
+        "ConnectionStrings__MySqlAnalytics": "Server=10.200.0.79;Port=3306;Database=SBInteligencia;User=ariel;Password=Tetratetra45+;",
+
+        "Cerberus__BaseUrl": "http://icia-monitoreo:8004"
       }
     },
     "IIS Express": {
       "commandName": "IISExpress",
       "launchBrowser": true,
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+
+        "ConnectionStrings__MySqlBase": "Server=10.200.0.79;Port=3306;User=ariel;Password=Tetratetra45+;",
+        "ConnectionStrings__MySqlAnalytics": "Server=10.200.0.79;Port=3306;Database=SBInteligencia;User=ariel;Password=Tetratetra45+;",
+
+        "Cerberus__BaseUrl": "http://icia-monitoreo:8004"
       }
     }
   }
