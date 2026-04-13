@@ -2078,7 +2078,7 @@
     <None Include="wwwroot\adminlte\bower_components\select2\dist\js\select2.min.js" />
     <None Include="wwwroot\adminlte\bower_components\select2\vendor\jquery-2.1.0.js" />
     <None Include="wwwroot\adminlte\bower_components\toastr\toastr.min.js" />
-    <None Include="wwwroot\js\Cobertura.js" />
+    <None Include="wwwroot\js\cobertura.js" />
     <None Include="wwwroot\js\hechos-consulta.js" />
   </ItemGroup>
 
