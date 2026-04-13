@@ -19,7 +19,7 @@ namespace SBInteligencia.Security
             // 🔥 MAPEO SIMPLE (después lo mejoramos)
             var file = $"permisos_{MapRolToNivel(rol)}.xml";
 
-            var path = Path.Combine(_env.ContentRootPath, "config/permisos", file);
+            var path = Path.Combine(_env.ContentRootPath, "Config", "Permisos", file);
 
             if (!File.Exists(path))
                 return new List<MenuItem>();
