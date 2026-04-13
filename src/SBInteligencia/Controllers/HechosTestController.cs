@@ -19,7 +19,19 @@ namespace SBInteligencia.Controllers
         {
             _service = service;
         }
+        [HttpGet("test-db")]
+        public async Task<IActionResult> TestDb()
+        {
+            var result = await _service.TestConexion(2026);
+            return Ok(result);
+        }
 
+        [HttpGet("test-db-query")]
+        public async Task<IActionResult> TestDbQuery()
+        {
+            var result = await _service.TestQuery(2026);
+            return Ok(result);
+        }
         [HttpPost("buscar")]
         public async Task<IActionResult> Buscar([FromBody] FiltrosHechos f)
         {
@@ -287,5 +299,6 @@ namespace SBInteligencia.Controllers
 
             return Ok();
         }
+
     }
 }

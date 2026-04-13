@@ -340,6 +340,36 @@ namespace SBInteligencia.Services
                 .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.Id == id);
         }
-        
+        public async Task<string> TestConexion(int anio)
+        {
+            try
+            {
+                using var db = _factory.Create(anio);
+
+                // 🔥 SOLO abrir conexión (sin query pesada)
+                await db.Database.OpenConnectionAsync();
+
+                return "OPEN OK";
+            }
+            catch (Exception ex)
+            {
+                return $"ERROR OPEN: {ex.Message}";
+            }
+        }
+        public async Task<string> TestQuery(int anio)
+        {
+            try
+            {
+                using var db = _factory.Create(anio);
+
+                var result = await db.Database.ExecuteSqlRawAsync("SELECT 1");
+
+                return "QUERY OK";
+            }
+            catch (Exception ex)
+            {
+                return $"ERROR QUERY: {ex.Message}";
+            }
+        }
     }
 }
