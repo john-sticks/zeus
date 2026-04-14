@@ -358,9 +358,7 @@ namespace SBInteligencia.Services
         }
         public async Task<string> TestQuery(int anio)
         {
-            try
-            {
-                var connectionString =
+            var connectionString =
                     "Server=192.168.1.13;" +
                     "Port=3306;" +
                     "Database=SBInteligencia;" +
@@ -372,6 +370,9 @@ namespace SBInteligencia.Services
                     "Pooling=true;" +
                     "MaximumPoolSize=5;" +
                     "ConnectionReset=false;";
+            try
+            {
+                
 
                 var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
 
@@ -394,7 +395,7 @@ namespace SBInteligencia.Services
             }
             catch (Exception ex)
             {
-                return $"ERROR QUERY: {ex.Message}";
+                return $"ERROR QUERY: {ex.Message + connectionString}" ;
             }
         }
     }
