@@ -382,7 +382,7 @@ namespace SBInteligencia.Services
                 // 🔥 prueba simple
                 var result = await db.Database.ExecuteSqlRawAsync("SELECT 1");
 
-                return "QUERY OK";
+                return "QUERY OK"+ connectionString;
             }
             catch (Exception ex)
             {
