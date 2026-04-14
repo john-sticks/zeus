@@ -6,6 +6,8 @@
         public string Nombre { get; set; }
 
         public List<HechoRefDto> Hechos { get; set; } = new();
+
+        public List<int> OriginalHechosIds { get; set; } = new();
     }
 
     public class HechoRefDto

@@ -294,6 +294,8 @@ namespace SBInteligencia.Controllers
             HttpContext.Session.Remove("InformeTemp");
             var dto = await _service.GetInformeIds(id);
 
+            dto.OriginalHechosIds = dto.Hechos.Select(h => h.IdHecho).ToList();
+
             HttpContext.Session.SetString("InformeTemp",
                 JsonSerializer.Serialize(dto));
 

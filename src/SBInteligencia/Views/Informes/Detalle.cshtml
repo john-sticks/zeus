@@ -154,24 +154,52 @@
 
             const idFromDto = dto.IdInforme || dto.idInforme;
 
-            if (!state.idInforme && idFromDto) {
+            if (idFromDto && idFromDto !== state.idInforme) {
+                state.idInforme = idFromDto;
+                originalHechosIds = null;
+                state.dirty = false;
+            } else if (!state.idInforme && idFromDto) {
                 state.idInforme = idFromDto;
             }
 
             const newIds = (hechos || [])
-                .map(x => x.idHecho)
-                .sort()
+                .map(x => x.idHecho ?? x.IdHecho)
+                .filter(x => x !== undefined && x !== null)
+                .map(Number)
+                .sort((a, b) => a - b)
                 .join(",");
 
-            // 🔥 GUARDAR ORIGINAL SOLO UNA VEZ
-            if (state.idInforme && originalHechosIds === null) {
+            const originalIds = dto.OriginalHechosIds || dto.originalHechosIds || [];
+
+            console.log("cargarDesdeSessionIfExists - valores actuales", {
+                newIds,
+                originalIds,
+                originalHechosIds,
+                state_idInforme: state.idInforme
+            });
+
+            // 🔥 GUARDAR ORIGINAL
+            if (originalIds.length > 0) {
+                originalHechosIds = originalIds
+                    .map(Number)
+                    .sort((a, b) => a - b)
+                    .join(",");
+            } else if (state.idInforme && originalHechosIds === null) {
                 originalHechosIds = newIds;
             }
 
-            // 🔥 DETECTAR CAMBIO REAL
-            // if (state.idInforme && originalHechosIds && newIds !== originalHechosIds) {
-                state.dirty = true;
-            // }
+            // 🔥 DETECTAR CAMBIO REAL solo si hay informe abierto
+            state.dirty = false;
+            if (state.idInforme && originalHechosIds !== null) {
+                state.dirty = (newIds !== originalHechosIds);
+            }
+
+            console.log("cargarDesdeSessionIfExists - después de calcular dirty", {
+                newIds,
+                originalHechosIds,
+                state_idInforme: state.idInforme,
+                state_dirty: state.dirty
+            });
 
             // 🔥 MODOS
             if (state.idInforme) {
@@ -218,6 +246,17 @@
         renderLeyenda(result.hechos);
 
         mostrarInforme();
+
+        const baselineIds = (result.hechos || [])
+            .map(x => x.id ?? x.idHecho)
+            .filter(x => x !== undefined && x !== null)
+            .map(Number)
+            .sort((a, b) => a - b)
+            .join(",");
+
+        originalHechosIds = baselineIds;
+        state.dirty = false;
+        document.getElementById("btnSobreescribir").style.display = "none";
         toggleHeader();
 
         setTimeout(() => {
@@ -297,7 +336,7 @@
 
             }, 50);
         }
-        
+
         function renderLeyenda(rows) {
 
             const cont = document.getElementById("leyendaMapa");
@@ -486,7 +525,7 @@
         // 🔥 ocultar loader
         const loader = document.getElementById("loaderListado");
         if (loader) loader.style.display = "none";
-        
+
         let html = `
                 <div class="box">
                     <div class="box-header">
@@ -552,6 +591,9 @@
 
             state.idInforme = id;
             state.modo = "guardado";
+            state.dirty = false;
+            originalHechosIds = null;
+            state.nombreInforme = null;
 
             // 🔥 LIMPIAR SESSION ANTES
             await fetch(`/api/informe/cerrar-session`, {
@@ -564,7 +606,19 @@
                 body: JSON.stringify(id)
             });
 
-            await cargarDesdeSessionIfExists();
+            await cargarInforme(id);
+
+            // 🔥 Asegurar baseline limpio tras abrir un informe nuevo
+            const baselineIds = (state.data || [])
+                .map(x => x.id ?? x.idHecho)
+                .filter(x => x !== undefined && x !== null)
+                .map(Number)
+                .sort((a, b) => a - b)
+                .join(",");
+
+            originalHechosIds = baselineIds;
+            state.dirty = false;
+            toggleHeader();
 
             history.pushState({}, "", `?id=${id}`);
         }
@@ -580,8 +634,12 @@
                 idInforme: null,
                 data: [],
                 modo: "listado",
-                dirty: false
+                dirty: false,
+                nombreInforme: null
             };
+            originalHechosIds = null;
+
+            document.getElementById("btnSobreescribir").style.display = "none";
 
             toggleHeader();
 
@@ -591,11 +649,9 @@
             document.querySelector("#tablaInforme tbody").innerHTML = "";
             document.getElementById("leyendaMapa").innerHTML = "";
 
-            // 🔥 mostrar listado y ocultar informe/mapa
+            // 🔥 mostrar listado y recargar listado
             mostrarListado();
-
-            // 🔥 recargar listado
-            cargarListadoInformes();
+            await cargarListadoInformes();
 
             history.pushState({}, "", `/Informes/Detalle`);
         }
@@ -694,24 +750,31 @@
 
                 function toggleHeader() {
 
-            if (state.modo === "preview") {
+            console.log("toggleHeader", {
+                modo: state.modo,
+                dirty: state.dirty,
+                idInforme: state.idInforme,
+                originalHechosIds
+            });
 
+            if (state.modo === "preview") {
                 document.getElementById("bloquePreview").style.display = "block";
                 document.getElementById("bloqueInformeAbierto").style.display = "none";
-
-            } else {
-
+            }
+            else if (state.modo === "guardado") {
                 document.getElementById("bloquePreview").style.display = "none";
                 document.getElementById("bloqueInformeAbierto").style.display = "block";
 
                 // 🔥 USAR EL DTO, NO EL INPUT
-        document.getElementById("lblNombreInforme").innerText =
-            state.nombreInforme + (state.dirty ? " *" : "");
+                document.getElementById("lblNombreInforme").innerText =
+                    state.nombreInforme + (state.dirty ? " *" : "");
 
                 document.getElementById("btnSobreescribir").style.display =
-        (state.modo === "guardado" && state.dirty)
-            ? "inline-block"
-            : "none";
+                    state.dirty ? "inline-block" : "none";
+            }
+            else {
+                document.getElementById("bloquePreview").style.display = "none";
+                document.getElementById("bloqueInformeAbierto").style.display = "none";
             }
         }
 

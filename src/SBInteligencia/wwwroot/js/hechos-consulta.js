@@ -15,7 +15,7 @@ $(document).ready(function () {
     autoToggleCheckbox("#relato", "#enableRelato");
     initCalificacionesTomSelect();
     initPartidosTomSelect(); // 🔥 AGREGAR
-    
+
     autoToggleCheckbox("#radio", "#enableGeo");
     // daterangepicker
     $('#rangoFechas').daterangepicker({
@@ -131,7 +131,7 @@ function actualizarMapa(rows) {
 
     if (!map) return;
 
-   
+
 
     // limpiar todo
     if (clusterGroup) map.removeLayer(clusterGroup);
@@ -1067,6 +1067,18 @@ async function irAInforme() {
         anio: anio
     }));
 
+    const sessionRes = await fetch("/api/informe/session");
+    const session = sessionRes.status === 200 ? await sessionRes.json() : null;
+    const reemplazar = !(session?.IdInforme || session?.idInforme);
+
+    console.log("irAInforme -> session", {
+        status: sessionRes.status,
+        ok: sessionRes.ok,
+        idInforme: session?.IdInforme || session?.idInforme,
+        reemplazar,
+        session
+    });
+
     const res = await fetch("/api/hechos/guardar-session", {
         method: "POST",
         headers: {
@@ -1074,15 +1086,39 @@ async function irAInforme() {
         },
         body: JSON.stringify({
             Hechos: hechos,
-            Reemplazar: false // 🔥 SIEMPRE
+            Reemplazar: reemplazar
         })
     });
 
-    const result = await res.json();
+    console.log("irAInforme -> guardar-session status", {
+        status: res.status,
+        ok: res.ok,
+        url: res.url
+    });
 
-    if (result.nuevos > 0) {
-        toastr.success(`Se agregaron ${result.nuevos} hechos`);
+    let result = null;
+    if (res.ok) {
+        const text = await res.text();
+        if (text) {
+            try {
+                result = JSON.parse(text);
+            } catch (err) {
+                console.error("irAInforme -> JSON parse error", err, text);
+            }
+        } else {
+            console.warn("irAInforme -> guardar-session returned empty body");
+            result = {};
+        }
     } else {
+        const errorText = await res.text();
+        console.error("irAInforme -> guardar-session failed", res.status, errorText);
+        toastr.error("Error al guardar selección en sesión");
+        return;
+    }
+
+    if (result?.nuevos > 0) {
+        toastr.success(`Se agregaron ${result.nuevos} hechos`);
+    } else if (result && typeof result.nuevos === 'number') {
         toastr.info("Los hechos ya estaban en el informe");
     }
 
