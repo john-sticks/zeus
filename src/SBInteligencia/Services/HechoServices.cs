@@ -360,7 +360,7 @@ namespace SBInteligencia.Services
         {
             var connectionString =
             //"Server=192.168.1.13;Port=3306;User=ariel;Password=Tetratetra45+;Connection Timeout=5;";
-            "Server=192.168.1.13;Port=3306;User=ariel;Password=Tetratetra45+;SslMode=None;Protocol=Tcp;ConnectionTimeout=30;DefaultCommandTimeout=60;Pooling=true;MinimumPoolSize=0;MaximumPoolSize=20;";
+            "Server=192.168.1.13;Database=SBInteligencia;Port=3306;User=ariel;Password=Tetratetra45+;SslMode=None;Protocol=Tcp;ConnectionTimeout=30;DefaultCommandTimeout=60;Pooling=true;MinimumPoolSize=0;MaximumPoolSize=20;";
             try
             {
                 
