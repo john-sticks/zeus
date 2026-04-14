@@ -14,7 +14,11 @@ namespace SBInteligencia
         public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-
+            // 🔥 FORZAR ORDEN
+            builder.Configuration
+                .AddJsonFile("appsettings.json", optional: true)
+                .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
+                .AddEnvironmentVariables(); // 👈 CLAVE
             // 🔹 MVC + JSON
             builder.Services.AddControllersWithViews()
                 .AddJsonOptions(options =>
