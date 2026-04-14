@@ -359,7 +359,7 @@ namespace SBInteligencia.Services
         public async Task<string> TestQuery(int anio)
         {
             var connectionString =
-                    "Server=10.200.0.79;Port=3306;User=ariel;Password=Tetratetra45+;Connection Timeout=5;";
+                    "Server=192.168.1.13;Port=3306;User=ariel;Password=Tetratetra45+;Connection Timeout=5;";
             try
             {
                 
