@@ -360,8 +360,34 @@ namespace SBInteligencia.Services
         {
             try
             {
-                using var db = _factory.Create(anio);
+                var connectionString =
+                    "Server=192.168.1.13;" +
+                    "Port=3306;" +
+                    "Database=delitos_2026;" +
+                    "User=ariel;" +
+                    "Password=Tetratetra45+;" +
+                    "SslMode=None;" +
+                    "ConnectionTimeout=10;" +
+                    "DefaultCommandTimeout=30;" +
+                    "Pooling=true;" +
+                    "MaximumPoolSize=5;" +
+                    "ConnectionReset=false;";
 
+                var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
+
+                optionsBuilder.UseMySql(
+                    connectionString,
+                    new MySqlServerVersion(new Version(8, 0, 36))
+                );
+
+                // 🔥 LOG para ver si entra
+                optionsBuilder
+                    .LogTo(Console.WriteLine)
+                    .EnableSensitiveDataLogging();
+
+                using var db = new AppDbContext(optionsBuilder.Options);
+
+                // 🔥 prueba simple
                 var result = await db.Database.ExecuteSqlRawAsync("SELECT 1");
 
                 return "QUERY OK";
