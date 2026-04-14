@@ -358,35 +358,18 @@ namespace SBInteligencia.Services
         }
         public async Task<string> TestQuery(int anio)
         {
-            var connectionString =
-            //"Server=192.168.1.13;Port=3306;User=ariel;Password=Tetratetra45+;Connection Timeout=5;";
-            "Server=192.168.1.13;Database=delitos_2026;Port=3306;User=ariel;Password=Tetratetra45+;SslMode=None;Protocol=Tcp;ConnectionTimeout=30;DefaultCommandTimeout=60;Pooling=true;MinimumPoolSize=0;MaximumPoolSize=20;";
             try
             {
-                
-
-                var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-
-                optionsBuilder.UseMySql(
-                    connectionString,
-                    new MySqlServerVersion(new Version(8, 0, 36))
-                );
-
-                // 🔥 LOG para ver si entra
-                optionsBuilder
-                    .LogTo(Console.WriteLine)
-                    .EnableSensitiveDataLogging();
-
-                using var db = new AppDbContext(optionsBuilder.Options);
+                using var db = _factory.Create(anio);
 
                 // 🔥 prueba simple
                 var result = await db.Database.ExecuteSqlRawAsync("SELECT 1");
 
-                return "QUERY OK"+ connectionString;
+                return "QUERY OK";
             }
             catch (Exception ex)
             {
-                return $"ERROR QUERY: {ex.Message + connectionString}" ;
+                return $"ERROR QUERY: {ex.Message}" ;
             }
         }
     }
