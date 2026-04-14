@@ -30,51 +30,67 @@ namespace SBInteligencia.Infrastructure.Data
 
             var builder = new MySqlConnectionStringBuilder(baseConn)
             {
-                Database = $"delitos_{anio}"
+                Database = $"delitos_{anio}",
+
+                // 🔥 CLAVE: evitar bloqueos en container
+                ConnectionTimeout = 10,
+                DefaultCommandTimeout = 30,
+                Pooling = true,
+                MinimumPoolSize = 0,
+                MaximumPoolSize = 10,
+                ConnectionReset = false
             };
 
             var connectionString = builder.ConnectionString;
 
-            // 🔍 DEBUG (podés dejarlo temporalmente)
             Console.WriteLine($"[DB] Conectando a: {builder.Server} / {builder.Database}");
 
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
 
             optionsBuilder.UseMySql(
                 connectionString,
-                new MySqlServerVersion(new Version(8, 0, 36)),
-                options =>
-                {
-                    options.EnableRetryOnFailure(
-                        maxRetryCount: 3,
-                        maxRetryDelay: TimeSpan.FromSeconds(5),
-                        errorNumbersToAdd: null
-                    );
-                });
+                new MySqlServerVersion(new Version(8, 0, 36))
+            // ❌ IMPORTANTE: SIN EnableRetryOnFailure
+            );
+
+            // 🔥 LOG (opcional pero recomendable ahora)
+            optionsBuilder
+                .LogTo(Console.WriteLine)
+                .EnableSensitiveDataLogging();
 
             return new AppDbContext(optionsBuilder.Options);
         }
 
         public SBInteligenciaDbContext CreateAnalytics()
         {
-            var connectionString = _configuration.GetConnectionString("MySqlAnalytics");
+            var baseConn = _configuration.GetConnectionString("MySqlAnalytics");
 
-            if (string.IsNullOrEmpty(connectionString))
+            if (string.IsNullOrEmpty(baseConn))
                 throw new Exception("Connection string MySqlAnalytics no configurada");
+
+            var builder = new MySqlConnectionStringBuilder(baseConn)
+            {
+                ConnectionTimeout = 10,
+                DefaultCommandTimeout = 30,
+                Pooling = true,
+                MinimumPoolSize = 0,
+                MaximumPoolSize = 10,
+                ConnectionReset = false
+            };
+
+            var connectionString = builder.ConnectionString;
 
             var optionsBuilder = new DbContextOptionsBuilder<SBInteligenciaDbContext>();
 
             optionsBuilder.UseMySql(
                 connectionString,
-                new MySqlServerVersion(new Version(8, 0, 36)),
-                options =>
-                {
-                    options.EnableRetryOnFailure(
-                        maxRetryCount: 3,
-                        maxRetryDelay: TimeSpan.FromSeconds(5),
-                        errorNumbersToAdd: null
-                    );
-                });
+                new MySqlServerVersion(new Version(8, 0, 36))
+            // ❌ SIN retry también
+            );
+
+            optionsBuilder
+                .LogTo(Console.WriteLine)
+                .EnableSensitiveDataLogging();
 
             return new SBInteligenciaDbContext(optionsBuilder.Options);
         }
