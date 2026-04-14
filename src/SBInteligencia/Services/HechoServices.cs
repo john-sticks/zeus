@@ -363,7 +363,7 @@ namespace SBInteligencia.Services
                 var connectionString =
                     "Server=192.168.1.13;" +
                     "Port=3306;" +
-                    "Database=delitos_2026;" +
+                    "Database=SBInteligencia;" +
                     "User=ariel;" +
                     "Password=Tetratetra45+;" +
                     "SslMode=None;" +
