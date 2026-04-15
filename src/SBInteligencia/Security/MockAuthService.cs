@@ -9,7 +9,7 @@
                 return Task.FromResult<LoginResponse?>(new LoginResponse
                 {
                     Usuario = usuario,
-                    Token = "mock-token"
+                    Token = "ariel"
                 });
             }
 

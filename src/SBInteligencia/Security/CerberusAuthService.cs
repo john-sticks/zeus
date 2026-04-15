@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Net.Http.Headers;
+using System.Text.Json;
 
 namespace SBInteligencia.Security
 {
@@ -6,11 +7,13 @@ namespace SBInteligencia.Security
     {
         private readonly HttpClient _http;
         private readonly string _baseUrl;
+        private readonly string _apiKey;
 
         public CerberusAuthService(HttpClient http, IConfiguration config)
         {
             _http = http;
-            _baseUrl = config["cerberus:BaseUrl"];
+            _baseUrl = config["Cerberus:BaseUrl"];
+            _apiKey = config["Cerberus:ServiceApiKey"];
         }
 
         public async Task<LoginResponse?> LoginAsync(string usuario, string password)
@@ -51,7 +54,12 @@ namespace SBInteligencia.Security
                 $"{_baseUrl}/cerberus/api/v1/users/info-servicio");
 
             request.Headers.Authorization =
-                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                new AuthenticationHeaderValue("Bearer", token);
+
+            request.Headers.Add("Service-Api-Key", _apiKey);
+
+            request.Headers.Accept.Add(
+                new MediaTypeWithQualityHeaderValue("application/json"));
 
             var response = await _http.SendAsync(request);
 
@@ -69,13 +77,18 @@ namespace SBInteligencia.Security
 
             return new UserSession
             {
-                Nombre = data?.nombre ?? "",
-                Token = token
+                Nombre = $"{data?.nombre} {data?.apellido}",
+                Token = token,
+                Rol = data?.rol ?? "",
+                Dependencia = data?.destino ?? ""
             };
         }
     }
     public class CerberusUserResponse
     {
         public string nombre { get; set; }
+        public string apellido { get; set; }
+        public string rol { get; set; }
+        public string destino { get; set; }
     }
 }

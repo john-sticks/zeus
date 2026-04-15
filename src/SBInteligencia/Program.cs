@@ -31,23 +31,40 @@ namespace SBInteligencia
 
             // 🔹 AUTH
             var authMode = builder.Configuration["Auth:Mode"];
+            var appMode = builder.Configuration["App:Mode"];
 
-            if (authMode == "Mock")
+            Console.WriteLine("ENV: " + builder.Environment.EnvironmentName);
+            Console.WriteLine("AUTH MODE: " + authMode);
+            Console.WriteLine("APP MODE: " + appMode);
+
+            if (authMode == "Cerberus")
             {
-                builder.Services.AddScoped<IAuthService, MockAuthService>();
+                var baseUrl = builder.Configuration["Cerberus:BaseUrl"];
+                var apiKey = builder.Configuration["Cerberus:ServiceApiKey"];
+
+                if (string.IsNullOrEmpty(baseUrl) || string.IsNullOrEmpty(apiKey))
+                    throw new Exception("🚨 Cerberus mal configurado");
             }
-            else if (authMode == "Cassandra")
+
+            switch (authMode)
             {
-                builder.Services.AddHttpClient<IAuthService, CassandraAuthService>()
-                    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-                    {
-                        UseCookies = true,
-                        CookieContainer = new CookieContainer()
-                    });
-            }
-            else
-            {
-                builder.Services.AddHttpClient<IAuthService, CerberusAuthService>();
+                case "Mock":
+                    builder.Services.AddScoped<IAuthService, MockAuthService>();
+                    break;
+
+                case "Cassandra":
+                    builder.Services.AddHttpClient<IAuthService, CassandraAuthService>()
+                        .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+                        {
+                            UseCookies = true,
+                            CookieContainer = new CookieContainer()
+                        });
+                    break;
+
+                case "Cerberus":
+                default:
+                    builder.Services.AddHttpClient<IAuthService, CerberusAuthService>();
+                    break;
             }
 
             builder.Services.AddScoped<AuthCookieService>();
