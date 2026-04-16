@@ -69,7 +69,10 @@ namespace SBInteligencia.Security
             Console.WriteLine(content);
 
             if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"CERBERUS GetUserInfo ERROR: {(int)response.StatusCode} {response.StatusCode}");
                 return null;
+            }
 
             var data = JsonSerializer.Deserialize<CerberusUserResponse>(
                 content,

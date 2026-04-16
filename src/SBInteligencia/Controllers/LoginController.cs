@@ -49,6 +49,12 @@ namespace SBInteligencia.Controllers
 
             var user = await _auth.GetUserInfo(loginResult.Token);
 
+            if (user == null)
+            {
+                ViewBag.Error = "No se pudo obtener la información del usuario. Contacte al administrador.";
+                return View();
+            }
+
             // 🔥 CREAR CLAIMS (igual que ya hacés)
             var claims = new List<Claim>
         {
