@@ -13,8 +13,16 @@
             <h3 class="box-title">Datos del Hecho</h3>
 
             <div class="box-tools pull-right">
-                <button class="btn btn-primary btn-sm" onclick="compartirInformacion()">
+                <button class="btn btn-primary btn-sm" onclick="copiarHecho()">
+                    <i class="fa fa-copy"></i> Copiar
+                </button>
+
+                <button class="btn btn-success btn-sm" onclick="compartirHecho()">
                     <i class="fa fa-share"></i> Compartir
+                </button>
+
+                <button class="btn btn-success btn-sm" onclick="compartirHechoWhatsapp()">
+                    <i class="fa fa-whatsapp"></i> WhatsApp
                 </button>
             </div>
         </div>
@@ -155,12 +163,19 @@
         }
 
     });
-            function obtenerInformacion() {
+             function obtenerInformacion() {
 
-        const tieneCoords = true;
+        function safe(v) {
+            return v || "-";
+        }
+
+        const lat = @Model.Latitud?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "null";
+        const lng = @Model.Longitud?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "null";
+
+        const tieneCoords = lat && lng;
 
         const coords = tieneCoords
-            ? `\nUbicación: https://www.google.com/maps?q=-34.474687,-58.577386`
+            ? `\nUbicación: https://www.google.com/maps?q=${lat},${lng}`
             : "";
 
         function decodeHtml(html) {
@@ -171,17 +186,87 @@
 
         const relatoTexto = decodeHtml(`@Model.Relato`);
 
-        const relato = `Relato:\n${relatoTexto.replace(/\r?\n/g, '\n')}`;
+        return `DATOS DEL HECHO
 
-        return `IPP: PP-14-05-001293-26/00
-    Calificación: Lesiones culposas - Art.94 Consumado: Si
-    Partido: SAN FERNANDO
-    Localidad: VICTORIA
-    Dirección: MARTIN RODRIGUEZ 4800.0
-    Fecha: 01/03/2026
-    ${relato}
+    IPP: ${safe("@Model.Ipp")}
+    Calificación: ${safe("@Model.Calificaciones")}
+    Partido: ${safe("@Model.Partido")}
+    Localidad: ${safe("@Model.Localidad")}
+    Dirección: ${safe("@Model.Calle")} ${safe("@Model.Altura")}
+    Dependencia: ${safe("@Model.Dependencia")}
+    Fecha: ${safe("@Model.FechaCarga.ToString("dd/MM/yyyy")")}
+
+    Relato:
+    ${relatoTexto}
+
     ${coords}`;
     }
+        function copiarHecho() {
+
+        const texto = obtenerInformacion();
+
+        if (!texto) {
+            toastr.warning("No hay datos");
+            return;
+        }
+
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(texto)
+                .then(() => toastr.success("Copiado"))
+                .catch(() => fallbackCopy(texto));
+        } else {
+            fallbackCopy(texto);
+        }
+    }
+        function compartirHecho() {
+
+        const texto = obtenerInformacion();
+
+        if (!texto) {
+            toastr.warning("No hay datos");
+            return;
+        }
+
+        if (navigator.share) {
+            navigator.share({
+                title: "Datos del Hecho",
+                text: texto
+            })
+            .catch(() => toastr.error("No se pudo compartir"));
+        } else {
+            toastr.info("Tu navegador no soporta compartir");
+        }
+    }
+        function compartirHechoWhatsapp() {
+
+        const texto = obtenerInformacion();
+
+        if (!texto) {
+            toastr.warning("No hay datos");
+            return;
+        }
+
+        const url = `https://wa.me/?text=${encodeURIComponent(texto)}`;
+
+        window.open(url, "_blank");
+    }
+        function fallbackCopy(texto) {
+        const textarea = document.createElement("textarea");
+        textarea.value = texto;
+
+        document.body.appendChild(textarea);
+        textarea.select();
+
+        try {
+            document.execCommand("copy");
+            toastr.success("Copiado");
+        } catch {
+            toastr.error("No se pudo copiar");
+        }
+
+        document.body.removeChild(textarea);
+    }
+
         function compartirInformacion() {
 
         const texto = obtenerInformacion();

@@ -163,10 +163,18 @@ function mostrarModalDetalle(x) {
 
     let html = `
     <div class="box-tools pull-right">
-        <button class="btn btn-primary btn-sm" onclick="compartirInvolucrado()">
-            <i class="fa fa-share"></i> Compartir
-        </button>
-    </div>
+    <button class="btn btn-primary btn-sm" onclick="compartirInvolucrado()">
+        <i class="fa fa-copy"></i> Copiar
+    </button>
+
+    <button class="btn btn-success btn-sm" onclick="compartirNativo()">
+        <i class="fa fa-share"></i> Compartir
+    </button>
+
+    <button class="btn btn-success btn-sm" onclick="compartirWhatsapp()">
+        <i class="fa fa-whatsapp"></i> WhatsApp
+    </button>
+</div>
         <div class="row">
 
             <div class="col-md-6">
@@ -220,21 +228,50 @@ Nombre: ${safe(x.nombre)}
 DNI: ${safe(x.nroDni)} (${safe(x.tipoDni)})
 Género: ${safe(x.genero)}
 Fecha Nacimiento: ${safe(x.fechaNacimiento)}
-País: ${safe(x.paisOrigen)}
-Provincia Nac: ${safe(x.provinciaNacimiento)}
-Ciudad Nac: ${safe(x.ciudadNacimiento)}
+
 Ubicación:
 ${safe(x.calleDomicilio)} ${safe(x.nroDomicilio)}
 ${safe(x.localidadDomicilio)} - ${safe(x.partidoDomicilio)}
-${safe(x.provinciaDomicilio)}
-
-Profesión: ${safe(x.profesion)}
 
 Observaciones:
 ${safe(x.observaciones)}
 `;
 }
+
 function compartirInvolucrado() {
+
+    const texto = obtenerTextoInvolucrado();
+
+    if (!texto) {
+        toastr.warning("No hay datos para copiar");
+        return;
+    }
+
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(texto)
+            .then(() => toastr.success("Copiado al portapapeles"))
+            .catch(() => fallbackCopy(texto));
+    } else {
+        fallbackCopy(texto);
+    }
+}
+function fallbackCopy(texto) {
+    const textarea = document.createElement("textarea");
+    textarea.value = texto;
+
+    document.body.appendChild(textarea);
+    textarea.select();
+
+    try {
+        document.execCommand("copy");
+        toastr.success("Copiado");
+    } catch {
+        toastr.error("No se pudo copiar");
+    }
+
+    document.body.removeChild(textarea);
+}
+function compartirNativo() {
 
     const texto = obtenerTextoInvolucrado();
 
@@ -246,17 +283,53 @@ function compartirInvolucrado() {
     if (navigator.share) {
 
         navigator.share({
-            title: 'Datos del Involucrado',
+            title: "Datos del involucrado",
             text: texto
         })
-            .then(() => console.log('Compartido'))
-            .catch((error) => console.log('Error', error));
+            .then(() => console.log("Compartido"))
+            .catch(() => toastr.error("No se pudo compartir"));
 
     } else {
-
-        navigator.clipboard.writeText(texto);
-        toastr.success("Copiado al portapapeles");
+        toastr.info("Tu navegador no soporta compartir directo");
     }
 }
+function compartirWhatsapp() {
+
+    const texto = obtenerTextoInvolucrado();
+
+    if (!texto) {
+        toastr.warning("No hay datos");
+        return;
+    }
+
+    const url = `https://wa.me/?text=${encodeURIComponent(texto)}`;
+
+    window.open(url, "_blank");
+}
+
+//function compartirInvolucrado() {
+
+//    const texto = obtenerTextoInvolucrado();
+
+//    if (!texto) {
+//        toastr.warning("No hay datos para compartir");
+//        return;
+//    }
+
+//    if (navigator.share) {
+
+//        navigator.share({
+//            title: 'Datos del Involucrado',
+//            text: texto
+//        })
+//            .then(() => console.log('Compartido'))
+//            .catch((error) => console.log('Error', error));
+
+//    } else {
+
+//        navigator.clipboard.writeText(texto);
+//        toastr.success("Copiado al portapapeles");
+//    }
+//}
 
 

@@ -6,11 +6,8 @@
     <page title="Cobertura de Datos" icon="fa fa-th-large" href="~/cobertura"></page>
   </navigation>
   <notnavigation>
-    <page title="Consulta Involucrados Historico" icon="fa fa-th-large" href="~/Consultas/Consulta_Imputados_Historico_Detalle.aspx"></page>
-    <page title="Consulta Hechos Historico" icon="fa fa-th-large" href="~/Consultas/Consulta_Hechos_Historico_Detalle.aspx"></page>
-    <page title="Consulta Georeferncial" icon="fa fa-th-large" href="~/Consultas/Consulta_Georeferncial.aspx"></page>
+    <page title="Detalle Hecho" href="~/hechos/detalle" />
     <page title="Inicio" href="~/home" />
-    <page title="CerraSesion" icon="" href="~/CerrarSesion.aspx"></page>
   </notnavigation>
   <permissions>
     <permission name="BUSCAR_HECHOS" />

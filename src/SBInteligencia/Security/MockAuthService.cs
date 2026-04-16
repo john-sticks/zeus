@@ -22,7 +22,13 @@
             {
                 Nombre = "Administrador Mock",
                 Token = token,
-
+                //"ADMINISTRADOR" => "10",
+                //"SUPERVISOR" => "15",
+                //"ANALISTA" => "20",
+                //"OPERADOR" => "20",
+                //"CONSULTOR" => "30",
+                //"ESTRATEGICO" => "30",
+                //_ => "30"
                 // 🔥 CLAVE: agregar estos
                 Rol = "ADMINISTRADOR",
                 Dependencia = "SISTEMAS"

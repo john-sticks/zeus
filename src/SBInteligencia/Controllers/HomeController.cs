@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SBInteligencia.Models;
 using SBInteligencia.Services;
@@ -33,6 +33,11 @@ namespace SBInteligencia.Controllers
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
+        [AllowAnonymous] // 🔥 importante
+        public IActionResult NoAutorizado()
+        {
+            return View();
         }
     }
 }
