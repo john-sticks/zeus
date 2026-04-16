@@ -242,16 +242,12 @@ function actualizarMapa(rows) {
 }
 function setYear(year) {
 
-    let desde, hasta;
     const hoy = moment();
 
-    if (year === 2026) {
-        desde = moment("01-01-2026", "DD-MM-YYYY");
-        hasta = hoy;
-    } else {
-        desde = moment(`01-01-${year}`, "DD-MM-YYYY");
-        hasta = moment(`31-12-${year}`, "DD-MM-YYYY");
-    }
+    let desde = moment(`01-01-${year}`, "DD-MM-YYYY");
+    let hasta = (year === hoy.year())
+        ? hoy
+        : moment(`31-12-${year}`, "DD-MM-YYYY");
 
     $("#rangoFechas").val(
         desde.format("DD/MM/YYYY") + " - " +

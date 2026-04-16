@@ -33,6 +33,7 @@ namespace SBInteligencia.Controllers
             return Ok(result);
         }
         [HttpPost("buscar")]
+        [HasPermission("BUSCAR_HECHOS")]
         public async Task<IActionResult> Buscar([FromBody] FiltrosHechos f)
         {
             var result = await _service.BuscarHechos(f);
@@ -41,6 +42,7 @@ namespace SBInteligencia.Controllers
 
         // 🔹 OPCIONAL: endpoint detalle JSON
         [HttpGet("{id}/{anio}")]
+        [HasPermission("VER_HECHOS")]
         public async Task<IActionResult> GetDetalle(int id, int anio)
         {
             var hecho = await _service.GetHechoDetalle(id, anio);
@@ -51,6 +53,7 @@ namespace SBInteligencia.Controllers
             return Ok(hecho);
         }
         [HttpPost("guardar-session")]
+        [HasPermission("CREAR_INFORME")]
         public IActionResult GuardarSession([FromBody] CrearInformeDto dto)
         {
             var json = HttpContext.Session.GetString("InformeTemp");
@@ -120,6 +123,7 @@ namespace SBInteligencia.Controllers
         }
 
         [HttpPost("buscar")]
+        [HasPermission("BUSCAR_INVOLUCRADOS")]
         public async Task<IActionResult> Buscar([FromBody] FiltrosInvolucrados f)
         {
             var result = await _service.BuscarInvolucrados(f);
@@ -149,6 +153,7 @@ namespace SBInteligencia.Controllers
         }
 
         [HttpGet]
+        [HasPermission("VER_COBERTURA")]
         public async Task<IActionResult> Get()
         {
             var data = await _service.GetResumen();
@@ -187,6 +192,7 @@ namespace SBInteligencia.Controllers
             };
         }
         [HttpPost("preview")]
+        [HasPermission("VER_INFORME")]
         public async Task<IActionResult> Preview([FromBody] CrearInformeDto dto)
         {
             try
@@ -204,6 +210,7 @@ namespace SBInteligencia.Controllers
         }
 
         [HttpPost("crear")]
+        [HasPermission("CREAR_INFORME")]
         public async Task<IActionResult> Crear([FromBody] CrearInformeDto dto)
         {
             var user = GetUser();
@@ -215,7 +222,7 @@ namespace SBInteligencia.Controllers
 
             return Ok(new { id });
         }
-
+        [HasPermission("VER_INFORME")]
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(int id)
         {
@@ -257,6 +264,7 @@ namespace SBInteligencia.Controllers
         }
 
         [HttpPost("eliminar-informe")]
+        [HasPermission("ELIMINAR_INFORME")]
         public async Task<IActionResult> EliminarInforme([FromBody] int idInforme)
         {
             var ok = await _service.EliminarInforme(idInforme);
@@ -266,6 +274,7 @@ namespace SBInteligencia.Controllers
 
             return Ok();
         }
+        [HasPermission("EDITAR_INFORME")]
         [HttpPost("actualizar")]
         public async Task<IActionResult> Actualizar([FromBody] CrearInformeDto dto)
         {
@@ -278,6 +287,7 @@ namespace SBInteligencia.Controllers
 
             return Ok(ok);
         }
+        [HasPermission("ELIMINAR_HECHO")]
         [HttpPost("eliminar")]
         public async Task<IActionResult> EliminarHecho([FromBody] EliminarHechoDto dto)
         {
@@ -288,6 +298,7 @@ namespace SBInteligencia.Controllers
 
             return Ok();
         }
+        [HasPermission("VER_INFORME")]
         [HttpPost("cargar-en-session")]
         public async Task<IActionResult> CargarEnSession([FromBody] int id)
         {

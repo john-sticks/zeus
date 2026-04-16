@@ -24,7 +24,7 @@
                 Token = token,
 
                 // 🔥 CLAVE: agregar estos
-                Rol = "ADMIN",
+                Rol = "ADMINISTRADOR",
                 Dependencia = "SISTEMAS"
             });
         }

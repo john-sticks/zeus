@@ -139,7 +139,7 @@ namespace SBInteligencia
             //    app.UseHsts();
             //}
             app.UseAuthorization();
-
+            app.UseMiddleware<MenuAuthorizationMiddleware>();
             // 🔹 ENDPOINTS
             app.MapControllers();
 

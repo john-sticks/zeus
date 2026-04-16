@@ -53,7 +53,7 @@ namespace SBInteligencia.Controllers
             var claims = new List<Claim>
         {
             new Claim(ClaimTypes.Name, user.Nombre),
-            new Claim(ClaimTypes.Role, user.Rol),
+            new Claim(ClaimTypes.Role, user.Rol.ToUpper().Trim()),
             new Claim("Dependencia", user.Dependencia),
             new Claim("Token", loginResult.Token)
         };
