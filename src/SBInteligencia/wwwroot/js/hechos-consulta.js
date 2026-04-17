@@ -157,12 +157,20 @@ function actualizarMapa(rows) {
             if (!isInBuenosAires(lat, lng)) return;
             const color = getColorByCalificacion(x.calificaciones);
 
+            const anio = new Date(x.fechaCarga).getFullYear();
+
             const marker = L.marker(
                 [lat, lng],
                 { icon: createCustomIcon(color) }
-            ).bindPopup(`
+                        ).bindPopup(`
                 <b>${x.calificaciones}</b><br>
-                ${x.partido} - ${x.localidad}
+                ${x.partido} - ${x.localidad}<br><br>
+
+                <a href="#"
+                   style="color:#007bff;font-weight:bold;"
+                   onclick="verDetalle(${x.idHecho}, ${anio}); return false;">
+                    🔎 Ver Hecho
+                </a>
             `);
 
             clusterGroup.addLayer(marker);
